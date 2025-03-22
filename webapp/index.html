@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Recognition</title>
+</head>
+<body>
+    <h1>Emotion Recognition</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button onclick="captureImage()">Detect Emotion</button>
+    <h2 id="result"></h2>
+
+    <script>
+        const video = document.getElementById("video");
+
+        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+            video.srcObject = stream;
+        });
+
+        function captureImage() {
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append("image", blob, "webcam.jpg");
+
+                fetch("http://127.0.0.1:5000/predict", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("result").innerText = "Emotion: " + (data.emotions[0] || "No face detected");
+                })
+                .catch(error => console.error(error));
+            }, "image/jpeg");
+        }
+    </script>
+</body>
+</html>
